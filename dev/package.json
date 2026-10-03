@@ -1,0 +1,21 @@
+{
+  "name": "js13k-2026-rainweaver",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "dev": "node tools/serve.mjs",
+    "test": "node test/rainweaver.mjs && node test/polish.mjs && node test/death.mjs && node test/score.mjs && node test/showcase.mjs && node tools/build.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@gfx/zopfli": "1.0.15",
+    "esbuild": "0.25.9",
+    "fflate": "0.8.2",
+    "roadroller": "2.1.0",
+    "terser": "5.44.0"
+  }
+}
