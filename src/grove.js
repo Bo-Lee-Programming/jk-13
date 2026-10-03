@@ -1,0 +1,19 @@
+import {platforms,anchors} from './motion.js';
+export const cyan=[.12,.63,.76],gold=[1,.57,.16],rainbow=[[1,.17,.28],[1,.5,.14],[1,.8,.24],[.3,.85,.5],[.12,.65,1],[.4,.3,1],[.8,.2,.8]];
+const bark=[.036,.061,.065],moss=[.055,.19,.13],rnd=n=>{let f=Math.sin(n*127.1+31.7)*43758.5453;return f-Math.floor(f)};
+export class Grove{
+ constructor(r){this.trunk=r.loft([[0,-5,0,2.8],[-1,0,0,1.5],[-.4,5,.4,1.05],[1.4,9,0,.65],[3,12,0,.35],[7,15,0,.005]],12);this.bough=r.loft([[0,0,0,.7],[1.3,.9,.1,.48],[3.6,.7,0,.3],[5.2,1.8,0,.15],[6,4,0,.005]],10);this.root=r.loft([[-4,-1,0,.001],[-2,.15,0,.16],[0,.5,0,.5],[2,-.6,.3,.33],[3,-5,0,.001]],9);this.leaf=r.loft([[0,0,0,.001],[.24,.22,0,.2],[.65,.3,0,.23],[1.3,.2,0,.001]],6,.12);this.islands=this.island(r,8);this.stems=r.loft([[-5,10,-3,.001],[-3,4,-1,.34],[-2,1.7,-.4,.17],[-.4,1,0,.08],[0,.4,0,.008]],8);this.water=r.loft([[0,0,0,.05],[0,3,0,.32],[.15,7,0,.38],[.2,15,0,.3]],8,.18)}
+ island(r,width){let out=[],ring=[[-2.4,-.4],[-1.6,0],[0,0],[1.6,0],[2.4,-.4],[1.7,-1.6],[.3,-3],[-1.5,-2]],steps=Math.ceil(width*2),pos=(i,j)=>{let t=i/steps,k=(j+8)%8,[z,y]=ring[k],edge=Math.sin(t*Math.PI),noise=Math.sin(i*2+j*1.7)*.09;return[t*width,y<-.5?y*(.6+edge*.4)+noise:y,z*(.72+edge*.28)]};for(let i=0;i<steps;i++)for(let j=0;j<8;j++)for(let tri of[[[0,0],[1,0],[1,1]],[[0,0],[1,1],[0,1]]]){let p=tri.map(([x,z])=>pos(i+x,j+z)),u=p[1].map((v,k)=>v-p[0][k]),v=p[2].map((v,k)=>v-p[0][k]),n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],l=Math.hypot(...n);for(let a of p)out.push(...a,...n.map(v=>-v/l))}for(let i of[0,steps])for(let j=0;j<8;j++)for(let p of[[i/steps*width,-.9,0],pos(i,j),pos(i,j+1)])out.push(...p,i===0?-1:1,0,0);return r.mesh(out)}
+ fern(r,x,y,z,s,c=moss){for(let j=0;j<5;j++){let a=(j-2)*.4;r.shape(this.leaf,[x,y,z],[s*(j<2?-1:1),s*(1-Math.abs(j-2)*.17),s*2],c,-4,a)}}
+ tree(r,x,y,z,s,flip=1){let c=z<-10?[.033,.09,.105]:bark;r.shape(this.trunk,[x,y,z],[s*flip,s,s],c,-3);for(let j=0;j<(z<-10?2:3);j++){let f=(j%2?-1:1)*flip,h=y+(5+j*2.6)*s,xx=x+(j*.8-.4)*s*flip;r.shape(this.bough,[xx,h,z],[s*f,s*(.7+j*.1),s],c,-3);for(let k=0;k<(z<-10?4:6);k++){let a=rnd(k+j*8+x)*6.28,xx2=xx+f*(2+k*.7)*s,yy=h+(1+k*.15)*s;this.fern(r,xx2,yy+Math.sin(a)*s,z+Math.cos(a)*s,s*(1+rnd(k+x)),z<-10?[.025,.11,.115]:moss)}}r.shape(this.root,[x,y,z],[s*2,s,s],c,-3)}
+ draw(r,cam,time,wake){
+ for(let i=Math.floor((cam-65)/11);i<(cam+65)/11;i++){let x=i*11;this.tree(r,x,-9,-23-rnd(i)*20,1.3+rnd(i+7)*.8,i%2?1:-1)}
+ for(let i=Math.floor((cam-35)/29);i<(cam+35)/29;i++)this.tree(r,i*29-7,-4,-7-rnd(i)*5,1.4+rnd(i+4)*.5,i%2?1:-1);
+ for(let [a,b,y]of platforms){if(b<cam-27||a>cam+27)continue;r.shape(this.islands,[a,y,0],[(b-a)/8,1,1],moss,-2);for(let x=a+.1;x<b;x+=.47){let seed=x*3;for(let side of[-1,1]){let z=side*1.7;this.fern(r,x,y-.1,z,(side>0?.16:.38)+rnd(seed)*.18);if(rnd(seed+side)>.58){let h=.15+rnd(seed)*.45;r.branch([x,y,z],[x,y+h,z],.016,moss);r.ball(x,y+h,z,.12,.055,.1,x<wake?gold:cyan,2);r.ball(x,y+h-.04,z,.055,.12,.05,cyan,.4)}}}for(let j=0;j<4;j++)r.shape(this.root,[a+(b-a)*j/4,y-1,1.25],[.8,.6+rnd(a+j),.7],bark,-3)}
+ for(let q of anchors)if(Math.abs(q.x-cam)<27){r.shape(this.stems,[q.x,q.y,0],[1,1,1],bark,-3);for(let k=0;k<3;k++)this.fern(r,q.x-1-k*.65,q.y+1.1+k*.5,-.15,.55)}
+ for(let n=Math.floor((cam-80)/112);n<(cam+40)/112;n++)for(let x of[17+n*112,46+n*112,49+n*112,52+n*112])if(Math.abs(x-cam)<40){r.shape(this.water,[x,-6,-17],[1.3,1.5,1],cyan,-5);for(let k=0;k<7;k++){let y=16-((time*(2+k*.1)+k*2.6)%22);r.branch([x+.3*Math.sin(k),y,-16.9],[x+.3*Math.sin(k),y+.4,-16.9],.013,cyan,.6)}}
+ r.box(cam,-6,-8,48,.04,23,[.03,.12,.17],-1);
+ for(let i=Math.floor((cam-28)/.73);i<(cam+28)/.73;i++){let x=i*.73+Math.sin(time*.35+i)*.4,y=-3+rnd(i+9)*18+Math.sin(time*.7+i)*.3,z=-12+rnd(i+6)*18,s=.012+rnd(i)*.027;r.ball(x,y,z,s,s,s,i%4?cyan:gold,2+Math.sin(time*2+i))}
+ for(let i=Math.floor((cam-25)/5);i<(cam+25)/5;i++)this.fern(r,i*5,-3.8-rnd(i)*2,9,2.5+rnd(i+4),[.007,.025,.027]);
+ }
+}
